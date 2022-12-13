@@ -1,0 +1,163 @@
+---
+title: "R Notebook - Relatório V"
+output: Relatorio V
+---
+
+```{r}
+
+library(dplyr)
+library(DescTools)
+library(fastDummies)
+
+sessionInfo()
+
+```
+
+```{r}
+
+url <- "https://raw.githubusercontent.com/Walassseee/Econometria/main/Dados/dados.csv"
+
+df <- read.csv(url, sep = ";")
+
+head(df, 10)
+
+```
+
+
+
+```{r}
+
+hist(df$notas_gerais,
+    main = "Distribuição de Notas Gerais ENADE - 2018",
+    xlab = "Notas Gerias", ylab = "Frequência")
+
+```
+# Medidas de ponto central e disperção
+
+```{r}
+
+totais <- data.frame(
+  Total = length(df$notas_gerais),
+  Media = mean(df$notas_gerais),
+  Mediana = median(df$notas_gerais),
+  Desvio = sd(df$notas_gerais),
+  Variancia = var(df$notas_gerais)
+)
+
+totais
+
+```
+
+# Teste de normalidade
+
+```{r}
+
+normalidade <- shapiro.test(sample(df$notas_gerais, 5000))
+
+if (normalidade$p.value < 0.05){
+  sprintf("Sendo H0 a hipotese de que a distribuição é uma normal com p_value em %s devemos rejeitar H0", normalidade$p.value)
+} else{
+  sprintf("Sendo H0 a hipotese de que a distribuição é uma normal com p_value em %s não devemos rejeitar H0", normalidade$p.value)
+}
+
+```
+
+
+```{r}
+
+sexo <- data.frame(
+  Sexo = c("Feminino","Masculino"),
+  Media = c(aggregate(df$notas_gerais, list(df$sexo), mean)[2]),
+  Mediana = c(aggregate(df$notas_gerais, list(df$sexo), median)[2]),
+  Desvio = c(aggregate(df$notas_gerais, list(df$sexo), sd)[2]),
+  Variancia = c(aggregate(df$notas_gerais, list(df$sexo), var)[2])
+)
+
+sexo
+
+```
+```{r}
+
+cor <- data.frame(
+  Cor = c("Amarela","Branca","Indigena","NSR","Parda","Preta"),
+  Media = c(aggregate(df$notas_gerais, list(df$cor), mean)[2]),
+  Mediana = c(aggregate(df$notas_gerais, list(df$cor), median)[2]),
+  Desvio = c(aggregate(df$notas_gerais, list(df$cor), sd)[2]),
+  Variancia = c(aggregate(df$notas_gerais, list(df$cor), var)[2])
+)
+
+cor
+
+```
+
+```{r}
+
+renda <- data.frame(
+  Renda = c("Entre 1.5 e 3 salarios","Entre 10 e 30 salarios","Entre 3 e 4.5 salarios","Entre 4.5 e 6 salarios","Entre 6 e 3 salarios","Maior que 30 salarios","Menor que 1.5 salarios"),
+  Media = c(aggregate(df$notas_gerais, list(df$renda), mean)[2]),
+  Mediana = c(aggregate(df$notas_gerais, list(df$renda), median)[2]),
+  Desvio = c(aggregate(df$notas_gerais, list(df$renda), sd)[2]),
+  Variancia = c(aggregate(df$notas_gerais, list(df$renda), var)[2])
+)
+
+renda
+
+```
+
+```{r}
+
+colegio <- data.frame(
+  Familiar = c("Maioria Privada","Maioria Publica","Parte Exterior","Total Privada","Total Publica","Total Exterior"),
+  Media = c(aggregate(df$notas_gerais, list(df$colegio_do_ensino_medio), mean)[2]),
+  Mediana = c(aggregate(df$notas_gerais, list(df$colegio_do_ensino_medio), median)[2]),
+  Desvio = c(aggregate(df$notas_gerais, list(df$colegio_do_ensino_medio), sd)[2]),
+  Variancia = c(aggregate(df$notas_gerais, list(df$colegio_do_ensino_medio), var)[2])
+)
+
+colegio
+
+```
+```{r}
+
+familiar <- data.frame(
+  Familiar = c("Com Ensino Superior","Sem Ensino Superior"),
+  Media = c(aggregate(df$notas_gerais, list(df$familiar_ensino_superior), mean)[2]),
+  Mediana = c(aggregate(df$notas_gerais, list(df$familiar_ensino_superior), median)[2]),
+  Desvio = c(aggregate(df$notas_gerais, list(df$familiar_ensino_superior), sd)[2]),
+  Variancia = c(aggregate(df$notas_gerais, list(df$familiar_ensino_superior), var)[2])
+)
+
+familiar
+
+```
+
+
+```{r}
+
+df <- dummy_cols(.data = df, select_columns = c(
+  "sexo","cor","renda","familiar_ensino_superior","colegio_do_ensino_medio"
+))
+
+names(df)
+
+```
+```{r}
+
+regressao <- lm(formula = notas_gerais ~ sexo_F + cor_amarela + cor_nsr + cor_indigena + cor_preta + cor_parda + renda_maior_que_30_salarios + renda_entre_10_e_30_salarios + renda_entre_6_e_3_salarios + renda_entre_4.5_e_6_salarios + renda_entre_3_e_4.5_salarios + renda_entre_1.5_e_3_salarios + familiar_ensino_superior_B + colegio_do_ensino_medio_maior_parte_em_escola_privada + colegio_do_ensino_medio_maior_parte_em_escola_publica + colegio_do_ensino_medio_parte_no_brasil_e_parte_no_exterior + colegio_do_ensino_medio_todo_em_escola_privada + colegio_do_ensino_medio_todo_no_exterior, data = df)
+
+resumo <- summary(regressao)
+
+resumo
+
+```
+
+```{r}
+
+resultados <- data.frame(resumo$coefficients)
+
+resultados
+
+```
+
+
+
