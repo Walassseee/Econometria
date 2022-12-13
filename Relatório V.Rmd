@@ -5,6 +5,10 @@ output: Relatorio V
 
 ```{r}
 
+install.packages("dplyr")
+install.packages("DescTools")
+install.packages("fastDummies")
+
 library(dplyr)
 library(DescTools)
 library(fastDummies)
@@ -30,6 +34,10 @@ head(df, 10)
 hist(df$notas_gerais,
     main = "Distribuição de Notas Gerais ENADE - 2018",
     xlab = "Notas Gerias", ylab = "Frequência")
+abline(v=mean(df$notas_gerais), col="red",
+       lwd=2, lty=2)
+abline(v=median(df$notas_gerais), col="blue",
+       lwd=2, lty=2)
 
 ```
 # Medidas de ponto central e disperção
@@ -92,6 +100,17 @@ cor
 
 ```{r}
 
+boxplot( formula = notas_gerais ~ sexo, data = df,
+         main = "Distribuição de Notas Gerais por Sexo",
+         xlab = "Sexo do Aluno", ylab = "Nota do Aluno")
+
+```
+
+
+
+
+```{r}
+
 renda <- data.frame(
   Renda = c("Entre 1.5 e 3 salarios","Entre 10 e 30 salarios","Entre 3 e 4.5 salarios","Entre 4.5 e 6 salarios","Entre 6 e 3 salarios","Maior que 30 salarios","Menor que 1.5 salarios"),
   Media = c(aggregate(df$notas_gerais, list(df$renda), mean)[2]),
@@ -106,6 +125,17 @@ renda
 
 ```{r}
 
+boxplot( formula = notas_gerais ~ renda, data = df,
+         main = "Distribuição de Notas Gerais por Renda",
+         xlab = "Renda do Aluno", ylab = "Nota do Aluno")
+
+
+```
+
+
+
+```{r}
+
 colegio <- data.frame(
   Familiar = c("Maioria Privada","Maioria Publica","Parte Exterior","Total Privada","Total Publica","Total Exterior"),
   Media = c(aggregate(df$notas_gerais, list(df$colegio_do_ensino_medio), mean)[2]),
@@ -117,6 +147,18 @@ colegio <- data.frame(
 colegio
 
 ```
+
+```{r}
+
+boxplot( formula = notas_gerais ~ colegio_do_ensino_medio, data = df,
+         main = "Distribuição de Notas Gerais por Instituição do Ensino Médio",
+         xlab = "Ensino Médio", ylab = "Nota do Aluno")
+
+
+```
+
+
+
 ```{r}
 
 familiar <- data.frame(
@@ -130,6 +172,15 @@ familiar <- data.frame(
 familiar
 
 ```
+
+```{r}
+
+boxplot( formula = notas_gerais ~ familiar_ensino_superior, data = df,
+         main = "Distribuição de Notas Gerais por Familiar com Ensino Superior",
+         xlab = "Familiar com Ensino Superior", ylab = "Nota do Aluno")
+
+```
+
 
 
 ```{r}
@@ -159,5 +210,30 @@ resultados
 
 ```
 
+```{r}
 
+df["log_notas_gerais"] = log(df$notas_gerais + 1)
+
+df
+
+```
+
+
+```{r}
+
+logreg <- lm(formula = log_notas_gerais ~ sexo_F + cor_amarela + cor_nsr + cor_indigena + cor_preta + cor_parda + renda_maior_que_30_salarios + renda_entre_10_e_30_salarios + renda_entre_6_e_3_salarios + renda_entre_4.5_e_6_salarios + renda_entre_3_e_4.5_salarios + renda_entre_1.5_e_3_salarios + familiar_ensino_superior_B + colegio_do_ensino_medio_maior_parte_em_escola_privada + colegio_do_ensino_medio_maior_parte_em_escola_publica + colegio_do_ensino_medio_parte_no_brasil_e_parte_no_exterior + colegio_do_ensino_medio_todo_em_escola_privada + colegio_do_ensino_medio_todo_no_exterior, data = df)
+
+resumo_logreg <- summary(logreg)
+
+resumo_logreg
+
+```
+
+```{r}
+
+resultados_log <- data.frame(resumo_logreg$coefficients)
+
+resultados_log
+
+```
 
